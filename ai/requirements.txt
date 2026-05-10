@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+langchain
+langchain-google-genai
+sqlparse
+pydantic
+python-dotenv
+sqlalchemy
