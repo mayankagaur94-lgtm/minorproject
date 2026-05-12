@@ -3,8 +3,7 @@ import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,18 +11,23 @@ load_dotenv()
 app = FastAPI()
 
 # Configuration
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    print("WARNING: GEMINI_API_KEY not found in .env")
+
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 SCHEMA_CONTEXT = """
 The MongoDB database has the following collections:
-- users: name, email, password_hash, role, department
+- university: name, location, established, contact, website
+- colleges: name, code, dean
 - students: roll_no, name, department, year, semester, cgpa, status, gender, email
 - faculty: name, department, designation, experience_yrs, email
-- subjects: code, name, department, credits, semester
-- attendance: student_roll, subject_code, date, present (Boolean)
-- marks: student_roll, subject_code, exam_type, marks_obtained, max_marks, grade
-- placements: student_roll, company, package_lpa, role, status
+- bus: route_no, driver, contact, route, timing
+- mess: day, breakfast, lunch, dinner
+- hostel: name, type, capacity, warden, fee_per_sem
+- admissions: course, intake, last_date, eligibility, fee_annual
 """
 
 class QueryRequest(BaseModel):
@@ -40,11 +44,11 @@ class QueryResponse(BaseModel):
 async def generate_mql(request: QueryRequest):
     user_query = request.query
     
-    prompt = ChatPromptTemplate.from_template("""
+    prompt = f"""
     You are an expert MongoDB Query assistant for a University Management System.
     
     Schema Context:
-    {schema}
+    {SCHEMA_CONTEXT}
     
     User Query: "{user_query}"
     
@@ -64,37 +68,28 @@ async def generate_mql(request: QueryRequest):
     
     Constraints:
     - Ensure the query is read-only.
-    - Do not include any markdown formatting like ```json.
-    """)
-    
-    chain = prompt | llm
+    - Do not include any markdown formatting like ```json. Return ONLY the raw JSON string.
+    """
     
     try:
-        response = chain.invoke({"schema": SCHEMA_CONTEXT, "user_query": user_query})
-        result = json.loads(response.content)
+        response = model.generate_content(prompt)
+        # Clean the response if it contains markdown code blocks
+        text = response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.endswith("```"):
+            text = text[:-3]
+        
+        result = json.loads(text.strip())
         return result
     except Exception as e:
         print(f"Error calling Gemini: {e}")
-        
-        # DEMO FALLBACK: Handle specific user query for testing without a valid API key
-        query_lower = user_query.lower()
-        if "back" in query_lower or "fail" in query_lower:
-            return {
-                "query": [
-                    {"$lookup": {"from": "marks", "localField": "roll_no", "foreignField": "student_roll", "as": "m"}},
-                    {"$match": {"m.grade": "F", "year": 3}}
-                ],
-                "type": "aggregation",
-                "explanation": "Searching for 3rd year students with backlogs (Grade F) as requested.",
-                "detected_language": "Hinglish",
-                "followup_suggestions": ["Show details of these students", "List top performers in 3rd year"]
-            }
         
         # Generic fallback
         return {
             "query": {},
             "type": "find",
-            "explanation": f"API Error: {str(e)}. Please check your GEMINI_API_KEY in ai/.env.",
+            "explanation": f"AI Error: {str(e)}. Please check your GEMINI_API_KEY.",
             "detected_language": "Unknown",
             "followup_suggestions": ["Check API Key"]
         }

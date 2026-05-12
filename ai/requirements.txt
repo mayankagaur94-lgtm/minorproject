@@ -6,3 +6,6 @@ sqlparse
 pydantic
 python-dotenv
 sqlalchemy
+pymongo
+faker
+google-generativeai
