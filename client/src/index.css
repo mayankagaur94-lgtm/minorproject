@@ -19,52 +19,36 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  
+  /* Celadon Theme Colors */
+  --color-celadon: #ACE1AF;
+  --color-celadon-dark: #8fc793;
+  --color-mint: #E0F2F1;
+  --color-emerald-soft: #50C878;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
-    --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142 70% 78%; /* Celadon-like HSL */
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 142 70% 78%;
+    --accent-foreground: 240 5.9% 10%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 142 70% 78%;
+    --radius: 1.5rem; /* 24px */
   }
 }
 
@@ -74,21 +58,68 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', 'Poppins', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow: hidden;
   }
 }
 
+/* Glassmorphism */
 .glass {
-  @apply bg-white/10 backdrop-blur-md border border-white/20;
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
 }
 
-.dark .glass {
-  @apply bg-black/40 backdrop-blur-lg border border-white/10;
+.glass-celadon {
+  @apply bg-celadon/10 backdrop-blur-md border border-celadon/20;
 }
 
-/* ChatGPT typing animation */
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.3; filter: blur(80px); }
+  50% { opacity: 0.6; filter: blur(60px); }
+}
+
+.animate-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+.glow-blob {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-celadon) 0%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+  animation: glow 8s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+}
+
+/* Neumorphism subtle */
+.soft-shadow {
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.3), 
+              -5px -5px 15px rgba(255, 255, 255, 0.05);
+}
+
+/* Typing Indicator */
 .typing-dot {
-  @apply w-1 h-1 bg-foreground rounded-full animate-bounce;
+  @apply w-1.5 h-1.5 bg-celadon rounded-full animate-bounce;
 }
-.typing-dot:nth-child(2) { animation-delay: 0.1s; }
-.typing-dot:nth-child(3) { animation-delay: 0.2s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
